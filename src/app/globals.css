@@ -54,4 +54,7 @@ body {
   .menu-link {
     @apply text-menu-link hover:scale-[110%] active:scale-90;
   }
+  .object-contain {
+    @apply w-auto;
+  }
 }

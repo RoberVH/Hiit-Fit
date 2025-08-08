@@ -1,125 +1,147 @@
-"use client";
+"use client"
 
-import { useState, useMemo } from "react"; // Changed useEffect to useMemo
-import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { routineSchema, RoutineFormValues } from "@/lib/validationSchemas";
-import Input from "@/components/forms/Input";
-import NumberInput from "@/components/forms/NumberInput";
-import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { v4 as uuidv4 } from "uuid";
+import { useState, useEffect, useMemo } from "react" // Changed useEffect to useMemo
+import { useForm, useFieldArray } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { routineSchema, RoutineFormValues } from "@/lib/validationSchemas"
+import Input from "@/components/forms/Input"
+import NumberInput from "@/components/forms/NumberInput"
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from "@hello-pangea/dnd"
+import { v4 as uuidv4 } from "uuid"
 
 interface EditRoutineProps {
-  isNewRoutine: boolean;
-  initialRoutineData?: RoutineFormValues;
+  isNewRoutine: boolean
+  initialRoutineData?: RoutineFormValues
 }
 
-export default function EditRoutine({ isNewRoutine, initialRoutineData }: EditRoutineProps) {
+export default function EditRoutine({
+  isNewRoutine,
+  initialRoutineData,
+}: EditRoutineProps) {
   const defaultFormValues = useMemo(() => {
     if (!isNewRoutine && initialRoutineData) {
-      const exercisesWithIds = initialRoutineData.exercises.map(ex => ({
-        id: ex.id || uuidv4(), // Ensure existing IDs are kept, otherwise generate new ones
-        name: ex.name,
-        duration: ex.duration,
-        restTime: ex.restTime
-      }));
       return {
         routineName: initialRoutineData.routineName,
         cycles: initialRoutineData.cycles,
-        exercises: exercisesWithIds,
-        newExercise: { name: '', duration: 0, restTime: 0 }
-      };
+        exercises: initialRoutineData.exercises,
+        newExercise: { name: "", duration: 0, restTime: 0 },
+      }
     }
     return {
       routineName: "",
       exercises: [],
       cycles: 1,
       newExercise: { name: "", restTime: 0, duration: 0 },
-    };
-  }, [isNewRoutine, initialRoutineData]);
+    }
+  }, [isNewRoutine, initialRoutineData])
 
   const {
     register,
     control,
     handleSubmit,
-    
     formState: { errors },
     getValues,
     setValue,
     resetField,
-    // reset, // reset is not needed here anymore
+    reset,
     trigger,
   } = useForm<RoutineFormValues>({
     resolver: zodResolver(routineSchema),
     defaultValues: defaultFormValues,
-  });
+  })
 
-  const { fields, append, remove, move, update } = useFieldArray({
+  const { fields, append, remove, move, update } = useFieldArray<
+    RoutineFormValues,
+    "exercises",
+    "fieldKey"
+  >({
     control,
     name: "exercises",
-  });
+    keyName: "fieldKey",
+  })
 
-  console.log("fields con ids generados:", fields);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  console.log("fields con ids generados:", fields)
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    setReady(true)
+  }, [])
 
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) {
-      return;
+      return
     }
-    move(result.source.index, result.destination.index);
-  };
+    move(result.source.index, result.destination.index)
+  }
 
   const handleAddOrUpdateExercise = async () => {
-    const isValid = await trigger(["newExercise.name", "newExercise.restTime", "newExercise.duration"]);
-    if (!isValid) {
-      return;
+    const isValid = await trigger([
+      "newExercise.name",
+      "newExercise.restTime",
+      "newExercise.duration",
+    ])
+    if (!isValid) return
+
+    const d = getValues("newExercise")
+    const id =
+      d?.id ??
+      (crypto.randomUUID
+        ? crypto.randomUUID()
+        : Math.random().toString(36).slice(2))
+    const exerciseToSave = {
+      id,
+      name: d?.name ?? "",
+      restTime: d?.restTime ?? 0,
+      duration: d?.duration ?? 0,
     }
 
-    const newExerciseData = getValues("newExercise");
-    if (newExerciseData?.name && newExerciseData.restTime !== undefined && newExerciseData.duration !== undefined) {
-      const exerciseToSave = {
-        id: newExerciseData.id || uuidv4(), // Ensure new exercises get an ID
-        name: newExerciseData.name,
-        restTime: newExerciseData.restTime,
-        duration: newExerciseData.duration,
-      };
-
-      if (editingIndex !== null) {
-        update(editingIndex, exerciseToSave);
-        setEditingIndex(null);
-      } else {
-        append(exerciseToSave);
-      }
-      resetField("newExercise.name");
-      resetField("newExercise.restTime");
-      resetField("newExercise.duration");
+    if (editingIndex !== null) {
+      update(editingIndex, exerciseToSave)
+      setEditingIndex(null)
+    } else {
+      append(exerciseToSave)
     }
-  };
+    resetField("newExercise.name")
+    resetField("newExercise.restTime")
+    resetField("newExercise.duration")
+    resetField("newExercise.id")
+  }
 
   const handleEditExercise = (index: number) => {
-    const exerciseToEdit = fields[index];
-    setValue("newExercise.name", exerciseToEdit.name);
-    setValue("newExercise.restTime", exerciseToEdit.restTime);
-    setValue("newExercise.duration", exerciseToEdit.duration);
-    setValue("newExercise.id", exerciseToEdit.id); // Set the ID when editing
-    setEditingIndex(index);
-  };
+    const exerciseToEdit = fields[index]
+    setValue("newExercise.name", exerciseToEdit.name)
+    setValue("newExercise.restTime", exerciseToEdit.restTime)
+    setValue("newExercise.duration", exerciseToEdit.duration)
+    setValue("newExercise.id", exerciseToEdit.id) // Set the ID when editing
+    setEditingIndex(index)
+  }
 
   const handleCancelEdit = () => {
-    setEditingIndex(null);
-    resetField("newExercise.name");
-    resetField("newExercise.restTime");
-    resetField("newExercise.duration");
-  };
+    setEditingIndex(null)
+    resetField("newExercise.name")
+    resetField("newExercise.restTime")
+    resetField("newExercise.duration")
+  }
 
   const onSubmit = (data: RoutineFormValues) => {
-    console.log(data);
-    // Aquí se manejaría el guardado de la rutina
-  };
+    console.log("Form data submitted:", data)
+  }
+
   return (
     <div className="p-8 mx-auto">
-      <h1 className="mb-6 text-center">{isNewRoutine ? "Crear Nueva Rutina" : "Editar Rutina"}</h1>
-      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <h1 className="mb-6 text-center">
+        {isNewRoutine ? "Crear Nueva Rutina" : "Editar Rutina"}
+      </h1>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="grid grid-cols-1 md:grid-cols-2 gap-8"
+      >
         <div className="flex flex-col gap-4">
           <Input
             id="routineName"
@@ -138,7 +160,9 @@ export default function EditRoutine({ isNewRoutine, initialRoutineData }: EditRo
           />
 
           <h2 className="mt-6 mb-4">
-            {editingIndex !== null ? `Editando Ejercicio No. ${editingIndex + 1}` : 'Agregar Ejercicio'}
+            {editingIndex !== null
+              ? `Editando Ejercicio No. ${editingIndex + 1}`
+              : "Agregar Ejercicio"}
           </h2>
           <div className="border border-gray-300 p-4 rounded-md flex flex-col gap-2">
             <Input
@@ -168,68 +192,109 @@ export default function EditRoutine({ isNewRoutine, initialRoutineData }: EditRo
               placeholder="Tiempo de descanso"
             />
             <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={handleAddOrUpdateExercise}
-              className="bg-button-primary text-white py-2 px-4 border-none rounded-md cursor-pointer self-start"
-            >
-              {editingIndex !== null ? 'Guardar Cambios' : 'Agregar'}
-            </button>
-            {editingIndex !== null && (
               <button
                 type="button"
-                onClick={handleCancelEdit}
-                className="bg-button-secondary text-white py-2 px-4 border-none rounded-md cursor-pointer self-start"
+                onClick={handleAddOrUpdateExercise}
+                className="bg-button-primary text-white py-2 px-4 border-none rounded-md cursor-pointer self-start"
               >
-                Cancelar Edición
+                {editingIndex !== null ? "Guardar Cambios" : "Agregar"}
               </button>
-            )}
+              {editingIndex !== null && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="bg-button-secondary text-white py-2 px-4 border-none rounded-md cursor-pointer self-start"
+                >
+                  Cancelar Edición
+                </button>
+              )}
             </div>
           </div>
 
           <div className="flex gap-4 mt-8 justify-end">
-            <button type="button" className="bg-button-secondary text-white py-3 px-6 border-none rounded-md cursor-pointer">
+            <button
+              type="button"
+              className="bg-button-secondary text-white py-3 px-6 border-none rounded-md cursor-pointer"
+            >
               Cancelar
             </button>
-            <button type="submit" className="bg-green-600 text-white py-3 px-6 border-none rounded-md cursor-pointer">
+            <button
+              type="submit"
+              className="bg-green-600 text-white py-3 px-6 border-none rounded-md cursor-pointer"
+            >
               Guardar Rutina
             </button>
           </div>
         </div>
-        <DragDropContext onDragEnd={onDragEnd}>
-          <Droppable droppableId="exercises" isDropDisabled={editingIndex !== null}>
-            {(provided) => (
-              <ul {...provided.droppableProps} ref={provided.innerRef} className="list-none p-0">
-                <h2>Ejercicios Agregados</h2>
-                {fields.map((field, index) => (
-                  <Draggable key={field.id} draggableId={field.id} index={index} isDragDisabled={editingIndex !== null}>
-                    {(provided) => (
-                      <li
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        className="border border-gray-300 p-3 mb-2 rounded-md flex justify-between items-center bg-gray-700 text-white"
-                        {...provided.dragHandleProps}
-                      >
-                        <span className="text-white"
-                        >{`${index + 1}: ${field.name} (Duración: ${field.duration}s, Descanso: ${field.restTime}s)`}</span>
-                        <div>
-                          <button type="button" onClick={() => handleEditExercise(index)} className="bg-button-warning text-white py-1.5 px-3 border-none rounded-md cursor-pointer mr-2">
-                            Editar
-                          </button>
-                          <button type="button" onClick={() => remove(index)} className="bg-button-danger text-white py-1.5 px-3 border-none rounded-md cursor-pointer">
-                            Eliminar
-                          </button>
-                        </div>
-                      </li>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </ul>
-            )}
-          </Droppable>
-        </DragDropContext>
+        {ready && (
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable
+              droppableId="exercises"
+              isDropDisabled={editingIndex !== null}
+            >
+              {(provided) => (
+                <ul
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="list-none p-0"
+                >
+                  <h2>Ejercicios Agregados</h2>
+                  {fields.map((field, index) => (
+                    <Draggable
+                      key={field.fieldKey}
+                      draggableId={String(field.id)}
+                      index={index}
+                      isDragDisabled={editingIndex !== null}
+                    >
+                      {(provided, snapshot) => (
+                        <li
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          style={{
+                            ...provided.draggableProps.style,
+                            cursor:
+                              editingIndex !== null
+                                ? "not-allowed"
+                                : snapshot.isDragging
+                                ? "grabbing"
+                                : "grab",
+                            touchAction: "none", // better mobile DnD, avoids scroll grab
+                          }}
+                          className="border border-gray-300 p-3 mb-2 rounded-md flex justify-between items-center bg-gray-700 text-white select-none"
+                          {...provided.dragHandleProps}
+                        >
+                          <span className="text-white">{`${index + 1}: ${
+                            field.name
+                          } (Duración: ${field.duration}s, Descanso: ${
+                            field.restTime
+                          }s)`}</span>
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => handleEditExercise(index)}
+                              className="bg-button-warning text-white py-1.5 px-3 border-none rounded-md cursor-pointer mr-2"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => remove(index)}
+                              className="bg-button-danger text-white py-1.5 px-3 border-none rounded-md cursor-pointer"
+                            >
+                              Eliminar
+                            </button>
+                          </div>
+                        </li>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </ul>
+              )}
+            </Droppable>
+          </DragDropContext>
+        )}
       </form>
     </div>
-  );
+  )
 }

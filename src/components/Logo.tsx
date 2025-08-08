@@ -9,7 +9,6 @@ import Image from "next/image";
           width={30}
           height={30}
           className="object-contain"
-          style={{ width: 'auto' }}
         />
     )
   }
