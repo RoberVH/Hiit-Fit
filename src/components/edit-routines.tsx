@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react" // Changed useEffect to useMemo
+import { useState, useEffect, useMemo } from "react"
+// useEffect sets initial readiness; useMemo memoizes default values
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { routineSchema, RoutineFormValues } from "@/lib/validationSchemas"
