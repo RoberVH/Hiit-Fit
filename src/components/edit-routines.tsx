@@ -127,6 +127,7 @@ export default function EditRoutine({
     resetField("newExercise.name")
     resetField("newExercise.restTime")
     resetField("newExercise.duration")
+    resetField("newExercise.id")
   }
 
   const onSubmit = (data: RoutineFormValues) => {
