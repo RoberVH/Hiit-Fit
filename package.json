@@ -6,11 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "node --import=tsx --test $(find src -type f \\( -name '*.test.ts' -o -name '*.spec.ts' -o -name '*.test.tsx' -o -name '*.spec.tsx' \\))",
+    "test:watch": "node --import=tsx --test --watch $(find src -type f \\( -name '*.test.ts' -o -name '*.spec.ts' -o -name '*.test.tsx' -o -name '*.spec.tsx' \\))",
+    "test:only": "node --import=tsx --test"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^5.2.1",
+    "@prisma/client": "^6.13.0",
+    "@supabase/supabase-js": "^2.54.0",
     "mongoose": "^8.17.0",
     "next": "15.4.5",
     "react": "19.1.0",
@@ -28,7 +33,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.4.5",
+    "prisma": "^6.13.0",
     "tailwindcss": "^4",
+    "tsx": "^4.20.3",
     "typescript": "^5"
   }
 }

@@ -132,7 +132,7 @@ export default function EditRoutine({
   }
 
   const onSubmit = (data: RoutineFormValues) => {
-    console.log("Form data submitted:", data)
+    console.log("Form data submitted!:", data)
   }
 
   return (

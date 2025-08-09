@@ -1,3 +1,4 @@
+//src/lib/__tests__/validationSchemas.test.ts
 import { test } from 'node:test';
 import assert from 'node:assert';
 import { exerciseSchema, routineSchema } from '../validationSchemas';
