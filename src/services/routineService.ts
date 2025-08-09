@@ -1,18 +1,18 @@
 import prisma from '@/lib/prisma'
-import { Dificultad } from '@prisma/client'
+import { Difficulty_Level } from '@prisma/client'
 
 // Create a new routine
 export async function createRoutine(data: {
   name: string
   descripcion?: string
-  dificultad: Dificultad
+  difficultyLevel: Difficulty_Level
   exerciseIds?: number[]
 }) {
   return prisma.routine.create({
     data: {
       name: data.name,
       descripcion: data.descripcion,
-      dificultad: data.dificultad,
+      difficultyLevel: data.difficultyLevel,
       exercises: data.exerciseIds
         ? { connect: data.exerciseIds.map(id => ({ id })) }
         : undefined,
@@ -33,7 +33,7 @@ export async function updateRoutine(
   data: {
     name?: string
     descripcion?: string
-    dificultad?: Dificultad
+    difficultyLevel?: Difficulty_Level
     exerciseIds?: number[]
   }
 ) {
@@ -42,7 +42,7 @@ export async function updateRoutine(
     data: {
       name: data.name,
       descripcion: data.descripcion,
-      dificultad: data.dificultad,
+      difficultyLevel: data.difficultyLevel,
       exercises: data.exerciseIds
         ? { set: data.exerciseIds.map(id => ({ id })) }
         : undefined,
