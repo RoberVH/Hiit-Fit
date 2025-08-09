@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Dificultad {
+  facil
+  media
+  dificil
+}
+
+model Routine {
+  id          Int        @id @default(autoincrement())
+  name        String
+  descripcion String?
+  dificultad  Dificultad
+  creadoEn    DateTime   @default(now())
+  exercises   Exercise[]
+}
+
+model Exercise {
+  id        Int      @id @default(autoincrement())
+  name      String
+  duration  Int
+  rest      Int      @default(0)
+  link      String?
+  routine   Routine? @relation(fields: [routineId], references: [id])
+  routineId Int?
+}
