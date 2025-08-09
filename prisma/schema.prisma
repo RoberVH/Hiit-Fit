@@ -7,19 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Dificultad {
-  facil
-  media
-  dificil
+enum Difficulty_Level {
+  easy
+  intermediate
+  hard
+  expert
 }
 
 model Routine {
-  id          Int        @id @default(autoincrement())
-  name        String
-  descripcion String?
-  dificultad  Dificultad
-  creadoEn    DateTime   @default(now())
-  exercises   Exercise[]
+  id             Int             @id @default(autoincrement())
+  name           String
+  descripcion    String?
+  difficultyLevel Difficulty_Level
+  creadoEn       DateTime        @default(now())
+  exercises      Exercise[]
 }
 
 model Exercise {
